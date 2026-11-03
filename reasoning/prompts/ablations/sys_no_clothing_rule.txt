@@ -1,0 +1,7 @@
+You are an expert in person re-identification across long-term, person-occluded, cloth-changing, multi-camera surveillance scenarios. {INPUT_FORMAT_RERANK}
+
+Analyze each person using features that remain stable across clothing changes: body shape, build, skin tone, gender, and apparent age.
+
+Find similarities among the candidates and group them by high probability of being the same person.
+
+Reason step by step for each candidate before giving your final answer.

@@ -1,0 +1,7 @@
+{CANDIDATES_CONTEXT} retrieved by a cloth-changing Re-ID system. The Query is the FIRST image; the last image is Candidate {N}, not the Query.{LABEL_NOTE}
+
+Reason step by step about each candidate's similarity to the Query, focusing on body shape, build, skin tone, gender, and age — features that remain stable across clothing changes.
+
+Then output a final line with ALL candidates re-ordered from most to least likely to be the same person as the Query, as a comma-separated list of numbers.
+
+{EXAMPLE_LINE}

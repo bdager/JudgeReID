@@ -1,0 +1,37 @@
+# PyTorch (CUDA 12.8 build; edit the index URL for another CUDA version)
+--index-url https://download.pytorch.org/whl/cu128
+torch==2.11.0+cu128
+torchvision==0.26.0+cu128
+
+--extra-index-url https://pypi.org/simple
+
+# Data, images and metrics
+numpy==2.4.4
+pandas==3.0.3
+h5py==3.14.0
+scikit-learn==1.9.0
+opencv-python==4.13.0.92
+Pillow==12.2.0
+matplotlib==3.10.9
+tqdm==4.68.0
+
+# Config and logging
+omegaconf==2.3.0
+pyyaml==6.0.3
+colorlog==6.10.1
+python-dotenv==1.2.2
+
+# VLM client (OpenAI-compatible API, served by vLLM)
+openai==2.41.0
+httpx==0.28.1
+
+# Expert models: DIFFER and SapiensID (cloned under models/)
+timm==1.0.27
+yacs==0.1.8
+einops==0.8.2
+torchinfo==1.8.0
+transformers==5.10.2
+easydict==1.13
+pyrootutils==1.0.4
+scikit-image==0.26.0
+ultralytics==8.4.76

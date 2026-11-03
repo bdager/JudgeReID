@@ -1,0 +1,11 @@
+# VLM config
+vlm:
+  name: "qwen3.6-27b" # fallback only; --vlm on the command line takes precedence
+  configs_dir: "configs/vlm" # server and sampling settings of each model live here
+
+  max_retries: 2 # correction re-prompts when an answer is not a valid ranking
+  max_retries_delay: 2 # seconds to wait before retrying a failed API call
+  concurrency: 70 # max concurrent API requests in flight
+
+  # --label_images
+  label_banner_h: 32 # height in px of the white label banner above each crop

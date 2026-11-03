@@ -1,0 +1,4 @@
+Your previous response could not be parsed. Reason: {REASON}
+Please end your answer with a line in exactly this format:
+RANKING: followed by all {N} candidate numbers as a comma-separated permutation of 1..{N}.
+{EXAMPLE_LINE}

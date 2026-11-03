@@ -1,0 +1,85 @@
+# ── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+
+# ── Virtual environments ─────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# ── Environment / secrets ────────────────────────────────────────────────────
+.env.*
+!.env.example
+*.env
+secrets.yaml
+secrets.json
+
+# ── HuggingFace / Qwen model weights ────────────────────────────────────────
+# Model cache downloaded at runtime
+.cache/
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.onnx
+# Keep small config/tokenizer JSON files but ignore large blobs
+# (add exceptions with !model_config.json if needed)
+
+# ── Dataset / data files ─────────────────────────────────────────────────────
+data/
+datasets/raw/
+# Allow committed CSV metadata files (small); block image/video dumps
+*.avi
+*.mp4
+*.mkv
+
+# ── Embeddings ───────────────────────────────────────────────────────────────
+embeddings/
+*.h5
+*.hdf5
+
+# ── Experiment outputs ───────────────────────────────────────────────────────
+runs/
+logs/
+results/
+outputs/
+*.log
+
+# ── Jupyter ──────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── IDE / editor ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Testing / coverage ───────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+
+checkpoints/
+models/DIFFER/
+models/sapiensid/
