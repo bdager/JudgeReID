@@ -8,7 +8,7 @@ fastreid   FastReID (https://github.com/JDAI-CV/fast-reid), see inference_fastre
 differ     DIFFER (https://github.com/xliangp/DIFFER)
 sapiensid  SapiensID (https://github.com/mk-minchul/sapiensid)
 
-DIFFER and SapiensID are used from a local clone of their repositories, by default models/DIFFER and models/sapiensid next to this script (override with --repo-dir).
+All three are used from a local clone of their repositories, by default models/fast-reid, models/DIFFER and models/sapiensid next to this script (override with --repo-dir).
 See README.md for the setup.
 
 HDF5 output layout:
@@ -40,6 +40,7 @@ import h5py
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_REPO_DIRS = {
+    "fastreid": os.path.join(SCRIPT_DIR, "models", "fast-reid"),
     "differ": os.path.join(SCRIPT_DIR, "models", "DIFFER"),
     "sapiensid": os.path.join(SCRIPT_DIR, "models", "sapiensid"),
 }
@@ -67,7 +68,8 @@ def load_model(model_name="fastreid", config_file=None, checkpoint_file=None, de
     """
     if model_name == "fastreid":
         from inference_fastreid import FastReIDModel
-        model = FastReIDModel(config_file=config_file, cktp=checkpoint_file)
+        model = FastReIDModel(config_file=config_file, cktp=checkpoint_file,
+                              model_dir=repo_dir or DEFAULT_REPO_DIRS["fastreid"])
         return model, 2048  # embedding dimension
     elif model_name == "differ":
         model = DIFFERModel(config_file, checkpoint_file, device=device,
@@ -187,6 +189,9 @@ def extract_embeddings(csv_path, input_dir, output_dir,
                     cfg_file="configs/Market1501/bagtricks_R101-ibn.yml",
                     cktp_file="checkpoints/market_bot_R101-ibn.pth",
                     batch_size=32, device="cuda", repo_dir=None):
+    # Absolute paths, FastReID changes the working directory when it loads
+    input_dir = os.path.abspath(input_dir)
+    output_dir = os.path.abspath(output_dir)
     df = pd.read_csv(csv_path)
     rel_paths = df["image_path"].tolist()
     image_paths = [os.path.join(input_dir, path) for path in rel_paths]
@@ -208,11 +213,15 @@ def extract_embeddings(csv_path, input_dir, output_dir,
     num_images = len(image_paths)
     print(f"Processing {num_images} images from {csv_path}")
 
-    # Create HDF5 file
+    # Only images that load are written, unused rows are cut at the end
+    skipped = []
+    written = 0
     with h5py.File(output_file, "w") as h5f:
-        emb_dataset = h5f.create_dataset("embeddings", shape=(num_images, emb_dim), dtype=np.float32)
-        ids_dataset = h5f.create_dataset("ids", shape=(num_images,), dtype=np.int32)
-        paths_dataset = h5f.create_dataset("paths", shape=(num_images,), dtype=h5py.string_dtype())
+        emb_dataset = h5f.create_dataset("embeddings", shape=(num_images, emb_dim),
+                                         maxshape=(None, emb_dim), dtype=np.float32)
+        ids_dataset = h5f.create_dataset("ids", shape=(num_images,), maxshape=(None,), dtype=np.int32)
+        paths_dataset = h5f.create_dataset("paths", shape=(num_images,), maxshape=(None,),
+                                           dtype=h5py.string_dtype())
 
         for start in tqdm(range(0, num_images, batch_size),
                           desc="Extracting embeddings"):
@@ -229,8 +238,9 @@ def extract_embeddings(csv_path, input_dir, output_dir,
                     img = model.transform(img)
                     batch_images.append(img)
                     valid_indices.append(i)
-                except (OSError, IOError, Exception) as e:
+                except Exception as e:
                     print(f"Warning: Skipping corrupted image {path}: {e}")
+                    skipped.append(path)
                     continue
 
             if not batch_images:
@@ -249,14 +259,22 @@ def extract_embeddings(csv_path, input_dir, output_dir,
                 embeddings = model(batch_tensor)  # [B, emb_dim]
                 embeddings = torch.nn.functional.normalize(embeddings, dim=1)  # L2 normalize
 
-            # Save to HDF5 (only for valid images)
-            for j, (emb, img_id, img_path) in enumerate(zip(embeddings.cpu().numpy(), valid_batch_ids, valid_batch_paths)):
-                actual_idx = start + valid_indices[j]
-                emb_dataset[actual_idx] = emb
-                ids_dataset[actual_idx] = img_id
-                paths_dataset[actual_idx] = img_path
+            # Rows are packed one after another
+            n = len(valid_indices)
+            emb_dataset[written:written + n] = embeddings.cpu().numpy()
+            ids_dataset[written:written + n] = valid_batch_ids
+            paths_dataset[written:written + n] = valid_batch_paths
+            written += n
 
-    print(f"✅ Saved embeddings to {output_file}")
+        if written < num_images:
+            for ds in (emb_dataset, ids_dataset, paths_dataset):
+                ds.resize(written, axis=0)
+
+    print(f"✅ Saved {written} embeddings to {output_file}")
+    if skipped:
+        print(f"⚠️  {len(skipped)} image(s) could not be read and are missing from the file. "
+              f"Results are not comparable with the leaderboard until they are fixed. First ones:\n  - "
+              + "\n  - ".join(skipped[:10]))
 
 
 if __name__ == "__main__":
@@ -279,8 +297,8 @@ if __name__ == "__main__":
             help="[fastreid, differ] Path to checkpoint file. "
                  "[sapiensid] Checkpoint folder with model.yaml and model.pth")
     parser.add_argument("--repo-dir", default=None,
-            help="[differ, sapiensid] Local clone of the model's repository "
-                 "(default: models/DIFFER or models/sapiensid next to this script)")
+            help="Local clone of the model's repository "
+                 "(default: models/fast-reid, models/DIFFER or models/sapiensid next to this script)")
     parser.add_argument("--device", default="cuda", help="Device for model inference (cuda or cpu)")
 
     args = parser.parse_args()
